@@ -1,8 +1,9 @@
-﻿using CourseWork.BLL.Services;
+﻿using CourseWork.BLL.Models;
+using CourseWork.BLL.Services;
 using CourseWork.PL.Models;
 using CourseWork.PL.Services;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -16,6 +17,9 @@ namespace CourseWork.PL
         public MainWindow()
         {
             InitializeComponent();
+            Coefficients.Thickness = 0.1;
+            Coefficients.YoungModule = Math.Pow(2, 11);
+            Coefficients.PoissonRatio = 0.3;
             Drawer.DrawLine(1100, 0, 1100, 2000, 3, Brushes.Black, MainCanvas);
             double h = 20;
             var outsideCircle = Drawer.GetAndDrawCircle(550, 400, 650, MainCanvas);
