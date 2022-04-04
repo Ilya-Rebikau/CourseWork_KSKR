@@ -1,4 +1,5 @@
 ﻿using Accord.Math;
+using System.Drawing;
 
 namespace CourseWork.BLL.Models
 {
@@ -14,6 +15,9 @@ namespace CourseWork.BLL.Models
             Nodes = nodes;
             InitLocalMatrix();
         }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>")]
+        public SolidBrush Color { get; set; } = new SolidBrush(System.Drawing.Color.FromArgb(0, 0, 255));
 
         public int Id { get; set; }
 
@@ -41,7 +45,6 @@ namespace CourseWork.BLL.Models
                 var node1 = Nodes[0];
                 var node2 = Nodes[1];
                 var node3 = Nodes[2];
-                var x = A.Determinant();
                 return new double[,]
                 {
 
@@ -80,12 +83,35 @@ namespace CourseWork.BLL.Models
 
         private void InitLocalMatrix()
         {
-            if (Coefficients.PoissonRatio == 0 || Coefficients.Thickness == 0 || Coefficients.YoungModule ==0)
+            if (Coefficients.PoissonRatio == 0 || Coefficients.Thickness == 0 || Coefficients.YoungModule == 0 || Coefficients.MeshStep == 0)
             {
-                throw new InvalidOperationException("Коэффициент Пуассона и/или модуль Юнга и/или толщина элемента не заданы");
+                throw new InvalidOperationException("Коэффициент Пуассона и/или модуль Юнга и/или толщина элемента и/или шаг сетки не заданы");
             }
 
             LocalMatrix = B.Transpose().Dot(E).Dot(B).Multiply(Coefficients.Thickness * GetSquare());
+        }
+
+        public double GetDeformation(double[] allDisplacements)
+        {
+            var oldX = new List<double>
+            {
+                Nodes[0].X,
+                Nodes[1].X,
+                Nodes[2].X,
+            };
+            foreach (var node in Nodes)
+            {
+                node.X += allDisplacements[node.Id * 2];
+                node.Y += allDisplacements[node.Id * 2 + 1];
+            }
+
+            double displacement = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                displacement += Math.Sqrt(Math.Pow(oldX[i] - Nodes[i].X, 2));
+            }
+
+            return displacement;
         }
 
         public override bool Equals(object obj)

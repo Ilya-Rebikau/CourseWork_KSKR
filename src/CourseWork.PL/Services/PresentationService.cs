@@ -3,7 +3,7 @@ using CourseWork.BLL.Services;
 using CourseWork.PL.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Windows;
 
 namespace CourseWork.PL.Services
 {
@@ -79,8 +79,14 @@ namespace CourseWork.PL.Services
             return nodesForPin;
         }
 
-        public static List<Node> GetNodesForTriangularFiniteElements(Circle outsideCircle, double h)
+        public static List<Node> GetNodesForTriangularFiniteElements(Circle outsideCircle)
         {
+            var h = Coefficients.MeshStep;
+            if (h == 0)
+            {
+                throw new InvalidOperationException("Шаг сетки не задан!");
+            }
+
             var nodeNumber = 0;
             var nodes = new List<Node>();
             for (double k = 0; k < 1100; k += h)
@@ -98,8 +104,14 @@ namespace CourseWork.PL.Services
             return nodes;
         }
 
-        public static List<MyLine> GetLinesForTriangularFiniteElements(Circle outsideCircle, double h, List<Node> nodes)
+        public static List<MyLine> GetLinesForTriangularFiniteElements(Circle outsideCircle, List<Node> nodes)
         {
+            var h = Coefficients.MeshStep;
+            if (h == 0)
+            {
+                throw new InvalidOperationException("Шаг сетки не задан!");
+            }
+
             var lines = new List<MyLine>();
             foreach (var node1 in nodes)
             {

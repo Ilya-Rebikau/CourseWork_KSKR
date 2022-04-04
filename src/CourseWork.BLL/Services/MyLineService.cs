@@ -4,6 +4,19 @@ namespace CourseWork.BLL.Services
 {
     public static class MyLineService
     {
+        public static List<MyLine> GetMyLines(List<TriangularFiniteElement> triangularFiniteElements)
+        {
+            var lines = new List<MyLine>();
+            foreach (var element in triangularFiniteElements)
+            {
+                AddUniqueLine(lines, new MyLine(new List<Node> { element.Nodes[0], element.Nodes[1] }));
+                AddUniqueLine(lines, new MyLine(new List<Node> { element.Nodes[0], element.Nodes[2] }));
+                AddUniqueLine(lines, new MyLine(new List<Node> { element.Nodes[1], element.Nodes[2] }));
+            }
+
+            return lines;
+        }
+
         public static bool AddUniqueLine(List<MyLine> lines, MyLine line)
         {
             var sameLines = 0;
