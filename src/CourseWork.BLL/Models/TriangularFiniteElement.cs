@@ -1,5 +1,4 @@
 ﻿using Accord.Math;
-using CourseWork.Models.BLL;
 
 namespace CourseWork.BLL.Models
 {
@@ -33,7 +32,7 @@ namespace CourseWork.BLL.Models
         };
 
         /// <summary>
-        /// Вс помогательная матрица с разностями координат.
+        /// Вспомогательная матрица с разностями координат.
         /// </summary>
         private double[,] B
         {
@@ -42,14 +41,24 @@ namespace CourseWork.BLL.Models
                 var node1 = Nodes[0];
                 var node2 = Nodes[1];
                 var node3 = Nodes[2];
+                var x = A.Determinant();
                 return new double[,]
                 {
 
                     { node2.Y - node3.Y, 0, node3.Y - node1.Y, 0, node1.Y - node2.Y, 0 },
                     { 0, node3.X - node2.X, 0, node1.X - node3.X, 0, node2.X - node1.X },
                     { node3.X - node2.X, node2.Y - node3.Y, node1.X - node3.X, node3.Y - node1.Y, node2.X - node1.X, node1.Y - node2.Y },
-                }.Multiply(1 / (2 * A.Determinant()));
+                }.Multiply(1 / (2 * GetSquare()));
             }
+        }
+
+        /// <summary>
+        /// Площадь конечного элемента.
+        /// </summary>
+        /// <returns>Площадь.</returns>
+        private double GetSquare()
+        {
+            return 0.5 * Math.Abs(A.Determinant());
         }
 
         /// <summary>
@@ -76,7 +85,7 @@ namespace CourseWork.BLL.Models
                 throw new InvalidOperationException("Коэффициент Пуассона и/или модуль Юнга и/или толщина элемента не заданы");
             }
 
-            LocalMatrix = B.Transpose().Dot(E).Dot(B).Multiply(Coefficients.Thickness * A.Determinant());
+            LocalMatrix = B.Transpose().Dot(E).Dot(B).Multiply(Coefficients.Thickness * GetSquare());
         }
 
         public override bool Equals(object obj)

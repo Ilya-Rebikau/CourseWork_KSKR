@@ -1,14 +1,84 @@
 ﻿using CourseWork.BLL.Models;
 using CourseWork.BLL.Services;
-using CourseWork.Models.BLL;
 using CourseWork.PL.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CourseWork.PL.Services
 {
     public static class PresentationService
     {
+        public static List<Node> GetNodesForApplicationForce(List<Node> nodes, List<InternalRectangle> rectangles)
+        {
+            if (rectangles is null || rectangles.Count != 2)
+            {
+                throw new ArgumentException("Прямоугольников должно быть 2!");
+            }
+
+            if (rectangles[0].CenterY > rectangles[1].CenterY)
+            {
+                var tmp = rectangles[0];
+                rectangles[0] = rectangles[1];
+                rectangles[1] = tmp;
+            }
+
+            var nodesForApplicationOfForce = new List<Node>();
+            foreach (var node in nodes)
+            {
+                if (rectangles[0].CenterX - rectangles[0].Rectangle.Width / 2 == node.X &&
+                    rectangles[0].CenterY - rectangles[0].Rectangle.Height / 2 <= node.Y &&
+                    rectangles[0].CenterY + rectangles[0].Rectangle.Height / 2 >= node.Y)
+                {
+                    nodesForApplicationOfForce.Add(node);
+                }
+
+                if (rectangles[1].CenterX + rectangles[1].Rectangle.Width / 2 == node.X &&
+                    rectangles[1].CenterY - rectangles[1].Rectangle.Height / 2 <= node.Y &&
+                    rectangles[1].CenterY + rectangles[1].Rectangle.Height / 2 >= node.Y)
+                {
+                    nodesForApplicationOfForce.Add(node);
+                }
+            }
+
+            return nodesForApplicationOfForce;
+        }
+
+        public static List<Node> GetNodesForPinModel(List<Node> nodes, List<InternalRectangle> rectangles)
+        {
+            if (rectangles is null || rectangles.Count != 2)
+            {
+                throw new ArgumentException("Прямоугольников должно быть 2!");
+            }
+
+            if (rectangles[0].CenterY > rectangles[1].CenterY)
+            {
+                var tmp = rectangles[0];
+                rectangles[0] = rectangles[1];
+                rectangles[1] = tmp;
+            }
+
+            var nodesForPin = new List<Node>();
+            foreach (var node in nodes)
+            {
+                if (rectangles[0].CenterX + rectangles[0].Rectangle.Width / 2 == node.X &&
+                    rectangles[0].CenterY - rectangles[0].Rectangle.Height / 2 <= node.Y &&
+                    rectangles[0].CenterY + rectangles[0].Rectangle.Height / 2 >= node.Y)
+                {
+                    nodesForPin.Add(node);
+                }
+
+                if (rectangles[1].CenterX - rectangles[1].Rectangle.Width / 2 == node.X &&
+                    rectangles[1].CenterY - rectangles[1].Rectangle.Height / 2 <= node.Y &&
+                    rectangles[1].CenterY + rectangles[1].Rectangle.Height / 2 >= node.Y)
+                {
+                    nodesForPin.Add(node);
+                }
+            }
+
+            return nodesForPin;
+        }
+
         public static List<Node> GetNodesForTriangularFiniteElements(Circle outsideCircle, double h)
         {
             var nodeNumber = 0;
@@ -20,6 +90,7 @@ namespace CourseWork.PL.Services
                     if (CheckForAffiliationToCircle(outsideCircle, x, y))
                     {
                         NodesService.AddUniqueNode(nodes, new Node { Id = nodeNumber, X = x, Y = y });
+                        nodeNumber++;
                     }
                 }
             }

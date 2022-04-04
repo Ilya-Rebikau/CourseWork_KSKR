@@ -1,4 +1,4 @@
-﻿namespace CourseWork.Models.BLL
+﻿namespace CourseWork.BLL.Models
 {
     public class Node
     {

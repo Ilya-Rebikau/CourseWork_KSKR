@@ -1,4 +1,4 @@
-﻿using CourseWork.Models.BLL;
+﻿using CourseWork.BLL.Models;
 
 namespace CourseWork.BLL.Services
 {

@@ -1,6 +1,4 @@
-﻿using CourseWork.Models.BLL;
-
-namespace CourseWork.BLL.Models
+﻿namespace CourseWork.BLL.Models
 {
     public class MyLine
     {

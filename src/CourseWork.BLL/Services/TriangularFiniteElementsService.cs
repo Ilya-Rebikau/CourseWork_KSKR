@@ -1,12 +1,9 @@
 ﻿using CourseWork.BLL.Models;
-using CourseWork.Models.BLL;
 
 namespace CourseWork.BLL.Services
 {
     public static class TriangularFiniteElementsService
     {
-        private static int id = 0;
-
         public static List<TriangularFiniteElement> GetTriangularFiniteElements(List<MyLine> lines)
         {
             var triangularFiniteElements = new List<TriangularFiniteElement>();
@@ -38,37 +35,15 @@ namespace CourseWork.BLL.Services
         private static TriangularFiniteElement CreateTriangularFiniteElement(MyLine line1, MyLine line2, MyLine line3)
         {
             TriangularFiniteElement triangularFiniteElement = null;
-            if (line1.Nodes[0].Equals(line3.Nodes[0]) && line2.Nodes[0].Equals(line3.Nodes[1]))
+            if (line1.Nodes[0].Equals(line3.Nodes[0]) && line2.Nodes[0].Equals(line3.Nodes[1]) ||
+                line1.Nodes[0].Equals(line3.Nodes[1]) && line2.Nodes[0].Equals(line3.Nodes[0]))
             {
-                triangularFiniteElement = new TriangularFiniteElement(new List<Node> { line3.Nodes[0], line3.Nodes[1], line1.Nodes[1] })
-                {
-                    Id = id
-                };
-                id++;
+                triangularFiniteElement = new TriangularFiniteElement(new List<Node> { line3.Nodes[0], line3.Nodes[1], line1.Nodes[1] });
             }
-            else if (line1.Nodes[0].Equals(line3.Nodes[1]) && line2.Nodes[0].Equals(line3.Nodes[0]))
+            else if (line1.Nodes[1].Equals(line3.Nodes[0]) && line2.Nodes[1].Equals(line3.Nodes[1]) ||
+                line1.Nodes[1].Equals(line3.Nodes[1]) && line2.Nodes[1].Equals(line3.Nodes[0]))
             {
-                triangularFiniteElement = new TriangularFiniteElement(new List<Node> { line3.Nodes[0], line3.Nodes[1], line1.Nodes[1] })
-                {
-                    Id = id
-                };
-                id++;
-            }
-            else if (line1.Nodes[1].Equals(line3.Nodes[0]) && line2.Nodes[1].Equals(line3.Nodes[1]))
-            {
-                triangularFiniteElement = new TriangularFiniteElement(new List<Node> { line3.Nodes[0], line3.Nodes[1], line1.Nodes[0] })
-                {
-                    Id = id
-                };
-                id++;
-            }
-            else if (line1.Nodes[1].Equals(line3.Nodes[1]) && line2.Nodes[1].Equals(line3.Nodes[0]))
-            {
-                triangularFiniteElement = new TriangularFiniteElement(new List<Node> { line3.Nodes[0], line3.Nodes[1], line1.Nodes[0] })
-                {
-                    Id = id
-                };
-                id++;
+                triangularFiniteElement = new TriangularFiniteElement(new List<Node> { line3.Nodes[0], line3.Nodes[1], line1.Nodes[0] });
             }
 
             return triangularFiniteElement;
@@ -76,9 +51,9 @@ namespace CourseWork.BLL.Services
 
         private static void AddUniqueTriangularFiniteElement(List<TriangularFiniteElement> triangularFiniteElements, TriangularFiniteElement newTriangularFiniteElement)
         {
-
             if (!triangularFiniteElements.Contains(newTriangularFiniteElement))
             {
+                newTriangularFiniteElement.Id = triangularFiniteElements.Count;
                 triangularFiniteElements.Add(newTriangularFiniteElement);
             }
         }
