@@ -1,5 +1,6 @@
 ﻿using Accord.Math;
 using CourseWork.BLL.Services;
+using System.Diagnostics;
 using System.Drawing;
 
 namespace CourseWork.BLL.Models
@@ -103,57 +104,22 @@ namespace CourseWork.BLL.Models
                 throw new InvalidOperationException("Глобальная матрица и/или узлы для закрепления не заданы!");
             }
 
-            int rows = GlobalMatrix.GetUpperBound(0) + 1;
-            int columns = GlobalMatrix.Length / rows;
-            foreach (var node in NodesForPin)
+            var globalMatrix2 = GlobalMatrix;
+            var nodesCount = Nodes.Count;
+            foreach (var node in Nodes)
             {
-                for (int i = 0; i < rows; i++)
+                if (NodesForPin.Contains(node))
                 {
-                    for (int j = 0; j < columns; j++)
+                    for (int j = 0; j < nodesCount * 2; j++)
                     {
-                        if (node.Id * 2 == i)
-                        {
-                            GlobalMatrix[j, node.Id * 2] = 0;
-                            GlobalMatrix[j, node.Id * 2 + 1] = 0;
-                        }
-
-                        if (node.Id * 2 + 1 == i)
-                        {
-                            GlobalMatrix[j, node.Id * 2] = 0;
-                            GlobalMatrix[j, node.Id * 2 + 1] = 0;
-                        }
-
-                        if (node.Id * 2 == j)
-                        {
-                            GlobalMatrix[node.Id * 2, i] = 0;
-                            GlobalMatrix[node.Id * 2 + 1, i] = 0;
-                        }
-
-                        if (node.Id * 2 + 1 == j)
-                        {
-                            GlobalMatrix[node.Id * 2, i] = 0;
-                            GlobalMatrix[node.Id * 2 + 1, i] = 0;
-                        }
+                        globalMatrix2[2 * node.Id, j] = 0;
+                        globalMatrix2[2 * node.Id + 1, j] = 0;
+                        globalMatrix2[j, 2 * node.Id] = 0;
+                        globalMatrix2[j, 2 * node.Id + 1] = 0;
                     }
-                }
-            }
 
-            foreach (var node in NodesForPin)
-            {
-                for (int i = 0; i < rows; i++)
-                {
-                    for (int j = 0; j < columns; j++)
-                    {
-                        if (node.Id * 2 == i && node.Id * 2 == j)
-                        {
-                            GlobalMatrix[i, j] = 1;
-                        }
-
-                        if (node.Id * 2 + 1 == i && node.Id * 2 + 1 == j)
-                        {
-                            GlobalMatrix[i, j] = 1;
-                        }
-                    }
+                    globalMatrix2[2 * node.Id, 2 * node.Id] = 1;
+                    globalMatrix2[2 * node.Id + 1, 2 * node.Id + 1] = 1;
                 }
             }
         }
@@ -179,7 +145,7 @@ namespace CourseWork.BLL.Models
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>")]
-        public void GiveColorsToFiniteElemenets(MeshPaintCharacteristicType type)
+        public void GiveColorsToFiniteElemenets(MeshPaintCharacteristicType type, StressCoords stressCoords)
         {
             if (TriangularFiniteElements is null || TriangularFiniteElements.Count == 0 ||
                 Displacements is null || Displacements.Length == 0)
@@ -193,15 +159,15 @@ namespace CourseWork.BLL.Models
                 double characteristic = 0;
                 switch (type)
                 {
+                    case MeshPaintCharacteristicType.Перемещения:
+                        characteristic = el.GetDisplacements(Displacements);
+                        break;
                     case MeshPaintCharacteristicType.Деформации:
                         characteristic = el.GetDeformation(Displacements);
                         break;
-                    //case MeshPaintCharacteristicType.Напряжения:
-                    //    characteristic = el.GetStress(nodesMoves);
-                    //    break;
-                    //case MeshPaintCharacteristicType.Деформации:
-                    //    characteristic = el.GetDeformation(nodesMoves);
-                    //    break;
+                    case MeshPaintCharacteristicType.Напряжения:
+                        characteristic = el.GetStress(Displacements, stressCoords);
+                        break;
                 }
                 if (characteristic < minCharacteristic)
                 {
@@ -214,21 +180,23 @@ namespace CourseWork.BLL.Models
                 }
             }
 
+            var x = new List<double>();
             foreach (var el in TriangularFiniteElements)
             {
                 double characteristic = 0;
                 switch (type)
                 {
+                    case MeshPaintCharacteristicType.Перемещения:
+                        characteristic = el.GetDisplacements(Displacements);
+                        break;
                     case MeshPaintCharacteristicType.Деформации:
                         characteristic = el.GetDeformation(Displacements);
                         break;
-                    //case MeshPaintCharacteristicType.Напряжения:
-                    //    characteristic = el.GetStress(nodesMoves);
-                    //    break;
-                    //case MeshPaintCharacteristicType.Деформации:
-                    //    characteristic = el.GetDeformation(nodesMoves);
-                    //    break;
+                    case MeshPaintCharacteristicType.Напряжения:
+                        characteristic = el.GetStress(Displacements, stressCoords);
+                        break;
                 }
+                x.Add(characteristic);
                 byte[] RGB = GradientMaker.GetRGBGradientValue(minCharacteristic, maxCharacteristic, characteristic);
                 el.Color = new SolidBrush(Color.FromArgb(200, RGB[0], RGB[1], RGB[2]));
             }

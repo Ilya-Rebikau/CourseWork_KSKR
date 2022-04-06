@@ -3,6 +3,7 @@ using CourseWork.BLL.Services;
 using CourseWork.PL.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 
 namespace CourseWork.PL.Services
@@ -51,13 +52,7 @@ namespace CourseWork.PL.Services
                 throw new ArgumentException("Прямоугольников должно быть 2!");
             }
 
-            if (rectangles[0].CenterY > rectangles[1].CenterY)
-            {
-                var tmp = rectangles[0];
-                rectangles[0] = rectangles[1];
-                rectangles[1] = tmp;
-            }
-
+            rectangles = rectangles.OrderBy(r => r.CenterY).ToList();
             var nodesForPin = new List<Node>();
             foreach (var node in nodes)
             {
@@ -79,7 +74,7 @@ namespace CourseWork.PL.Services
             return nodesForPin;
         }
 
-        public static List<Node> GetNodesForTriangularFiniteElements(Circle outsideCircle)
+        public static List<Node> GetNodesForTriangularFiniteElements(Circle circle, List<InternalRectangle> rectangles)
         {
             var h = Coefficients.MeshStep;
             if (h == 0)
@@ -89,11 +84,12 @@ namespace CourseWork.PL.Services
 
             var nodeNumber = 0;
             var nodes = new List<Node>();
-            for (double k = 0; k < 1100; k += h)
+            for (double k = 0; k < 1000; k += h)
             {
-                for (double x = 0, y = k; x < 1100; x += h)
+                for (double x = 0, y = k; x < 1000; x += h)
                 {
-                    if (CheckForAffiliationToCircle(outsideCircle, x, y))
+                    if (CheckForAffiliationToCircle(circle, x, y) &&
+                        !CheckForAffiliationToInternalRectangles(rectangles, x, y))
                     {
                         NodesService.AddUniqueNode(nodes, new Node { Id = nodeNumber, X = x, Y = y });
                         nodeNumber++;
@@ -104,7 +100,7 @@ namespace CourseWork.PL.Services
             return nodes;
         }
 
-        public static List<MyLine> GetLinesForTriangularFiniteElements(Circle outsideCircle, List<Node> nodes)
+        public static List<MyLine> GetLinesForTriangularFiniteElements(Circle circle, List<InternalRectangle> rectangles, List<Node> nodes)
         {
             var h = Coefficients.MeshStep;
             if (h == 0)
@@ -120,8 +116,12 @@ namespace CourseWork.PL.Services
                     if ((node1.X - node2.X == h && node1.Y - node2.Y == h) || (node1.X == node2.X && node1.Y - node2.Y == h)
                         || (node1.X - node2.X == h && node1.Y == node2.Y) || (node1.X - node2.X == -h && node1.Y - node2.Y == h))
                     {
-                        if (CheckForAffiliationToCircle(outsideCircle, node1.X, node1.Y) &&
-                            CheckForAffiliationToCircle(outsideCircle, node2.X, node2.Y))
+                        var centerNodeOfLine = NodesService.GetCenterNodeOfLine(node1, node2);
+                        if (CheckForAffiliationToCircle(circle, node1.X, node1.Y) &&
+                            CheckForAffiliationToCircle(circle, node2.X, node2.Y) &&
+                            !CheckForAffiliationToInternalRectangles(rectangles, node1.X, node1.Y) &&
+                            !CheckForAffiliationToInternalRectangles(rectangles, node2.X, node2.Y) &&
+                            !CheckForAffiliationToInternalRectangles(rectangles, centerNodeOfLine.X, centerNodeOfLine.Y))
                         {
                             var line = new MyLine(new List<Node> { node1, node2 });
                             MyLineService.AddUniqueLine(lines, line);
@@ -160,8 +160,8 @@ namespace CourseWork.PL.Services
 
             foreach (var rectangle in rectangles)
             {
-                if (x >= rectangle.Points[0].X && y >= rectangle.Points[0].Y && x <= rectangle.Points[1].X && y >= rectangle.Points[1].Y
-                    && x <= rectangle.Points[2].X && y <= rectangle.Points[2].Y && x >= rectangle.Points[3].X && y <= rectangle.Points[2].Y)
+                if (x > rectangle.Points[0].X && y > rectangle.Points[0].Y && x < rectangle.Points[1].X && y > rectangle.Points[1].Y
+                    && x < rectangle.Points[2].X && y < rectangle.Points[2].Y && x > rectangle.Points[3].X && y < rectangle.Points[2].Y)
                 {
                     return true;
                 }

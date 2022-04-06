@@ -2,6 +2,7 @@
 {
     public enum MeshPaintCharacteristicType
     {
+        Перемещения,
         Напряжения,
         Деформации,
     }
