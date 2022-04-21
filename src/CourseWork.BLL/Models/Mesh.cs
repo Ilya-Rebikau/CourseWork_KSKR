@@ -78,6 +78,7 @@ namespace CourseWork.BLL.Models
                     if (node.Id * 2 == i)
                     {
                         answers[i] = Coefficients.Force;
+                        //answers[i + 1] = Coefficients.Force; //по Y не прикладываю силу
                     }
                 }
             }
@@ -89,6 +90,7 @@ namespace CourseWork.BLL.Models
                     if (node.Id * 2 == i)
                     {
                         answers[i] = -Coefficients.Force;
+                        //answers[i + 1] = -Coefficients.Force; //по Y не прикладываю силу
                     }
                 }
             }
@@ -104,7 +106,7 @@ namespace CourseWork.BLL.Models
                 throw new InvalidOperationException("Глобальная матрица и/или узлы для закрепления не заданы!");
             }
 
-            var globalMatrix2 = GlobalMatrix;
+            var globalMatrix = GlobalMatrix;
             var nodesCount = Nodes.Count;
             foreach (var node in Nodes)
             {
@@ -112,14 +114,14 @@ namespace CourseWork.BLL.Models
                 {
                     for (int j = 0; j < nodesCount * 2; j++)
                     {
-                        globalMatrix2[2 * node.Id, j] = 0;
-                        globalMatrix2[2 * node.Id + 1, j] = 0;
-                        globalMatrix2[j, 2 * node.Id] = 0;
-                        globalMatrix2[j, 2 * node.Id + 1] = 0;
+                        globalMatrix[2 * node.Id, j] = 0;
+                        globalMatrix[2 * node.Id + 1, j] = 0;
+                        globalMatrix[j, 2 * node.Id] = 0;
+                        globalMatrix[j, 2 * node.Id + 1] = 0;
                     }
 
-                    globalMatrix2[2 * node.Id, 2 * node.Id] = 1;
-                    globalMatrix2[2 * node.Id + 1, 2 * node.Id + 1] = 1;
+                    globalMatrix[2 * node.Id, 2 * node.Id] = 1;
+                    globalMatrix[2 * node.Id + 1, 2 * node.Id + 1] = 1;
                 }
             }
         }
@@ -145,7 +147,7 @@ namespace CourseWork.BLL.Models
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>")]
-        public void GiveColorsToFiniteElemenets(MeshPaintCharacteristicType type, StressCoords stressCoords)
+        public void GiveColorsToFiniteElemenets(MeshPaintCharacteristicType type)
         {
             if (TriangularFiniteElements is null || TriangularFiniteElements.Count == 0 ||
                 Displacements is null || Displacements.Length == 0)
@@ -163,10 +165,10 @@ namespace CourseWork.BLL.Models
                         characteristic = el.GetDisplacements(Displacements);
                         break;
                     case MeshPaintCharacteristicType.Деформации:
-                        characteristic = el.GetDeformation(Displacements);
+                        characteristic = el.GetDeformation();
                         break;
                     case MeshPaintCharacteristicType.Напряжения:
-                        characteristic = el.GetStress(Displacements, stressCoords);
+                        characteristic = el.GetStress();
                         break;
                 }
                 if (characteristic < minCharacteristic)
@@ -190,10 +192,10 @@ namespace CourseWork.BLL.Models
                         characteristic = el.GetDisplacements(Displacements);
                         break;
                     case MeshPaintCharacteristicType.Деформации:
-                        characteristic = el.GetDeformation(Displacements);
+                        characteristic = el.GetDeformation();
                         break;
                     case MeshPaintCharacteristicType.Напряжения:
-                        characteristic = el.GetStress(Displacements, stressCoords);
+                        characteristic = el.GetStress();
                         break;
                 }
                 x.Add(characteristic);

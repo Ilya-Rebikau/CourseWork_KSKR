@@ -25,107 +25,69 @@ namespace CourseWork.BLL.Models
 
         public double[,] LocalMatrix { get; private set; }
 
-        public double Displacement { get; private set; }
+        public double[] Displacements { get; private set; }
 
-        public double Deformation { get; private set; }
+        public double[] Deformations { get; private set; }
 
-        public double Stress { get; private set; }
-
-        public double[,] StressMatrix { get; private set; }
+        private double[,] OldCoords { get; set; }
 
         public double GetDisplacements(double[] allDisplacements)
         {
-            double[] currentElementDisplacements = new double[6];
+            OldCoords = new double[,]
+            {
+                { Nodes[0].X, Nodes[0].Y },
+                { Nodes[1].X, Nodes[1].Y },
+                { Nodes[2].X, Nodes[2].Y },
+            };
+            double[] currentElementNodesDisplacements = new double[6];
             int i = 0;
             foreach (var node in Nodes)
             {
-                currentElementDisplacements[i * 2] = allDisplacements[node.Id * 2];
-                node.X += currentElementDisplacements[i * 2];
-                currentElementDisplacements[i * 2 + 1] = allDisplacements[node.Id * 2 + 1];
-                node.Y += currentElementDisplacements[i * 2 + 1];
+                currentElementNodesDisplacements[i * 2] = allDisplacements[node.Id * 2];
+                currentElementNodesDisplacements[i * 2 + 1] = allDisplacements[node.Id * 2 + 1];
                 i++;
+            }
+            Displacements = currentElementNodesDisplacements;
+            i = 0;
+            foreach (var node in Nodes)
+            {
+                node.X += Displacements[i];
+                node.Y += Displacements[i + 1];
+                i += 2;
             }
             double displacement = 0;
             for (i = 0; i < 3; i++)
             {
-                displacement += Math.Sqrt(Math.Pow(currentElementDisplacements[i * 2], 2) + Math.Pow(currentElementDisplacements[i * 2 + 1], 2));
+                displacement += Math.Abs(Math.Pow(OldCoords[i, 0] - Nodes[i].X, 2) + Math.Pow(OldCoords[i, 1] - Nodes[i].Y, 2));
             }
 
-            return displacement / 4;
-            //OldCoords = new double[,]
-            //{
-            //    { Nodes[0].X, Nodes[0].Y },
-            //    { Nodes[1].X, Nodes[1].Y },
-            //    { Nodes[2].X, Nodes[2].Y },
-            //};
-            //foreach (var node in Nodes)
-            //{
-            //    node.X += allDisplacements[node.Id * 2];
-            //    node.Y += allDisplacements[node.Id * 2 + 1];
-            //}
-
-            //double displacement = 0;
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    displacement += Math.Abs(OldCoords[i, 0] - Nodes[i].X + OldCoords[i, 1] - Nodes[i].Y);
-            //}
-
-            //Displacement = displacement;
-            //return displacement;
+            return displacement;
         }
 
-        public double GetDeformation(double[] allDisplacements)
+        public double GetDeformation()
         {
-            double[] currentElementNodesMoves = new double[6];
-            int i = 0;
-            foreach (var node in Nodes)
-            {
-                currentElementNodesMoves[i * 2] = allDisplacements[node.Id * 2];
-                currentElementNodesMoves[i * 2 + 1] = allDisplacements[node.Id * 2 + 1];
-                i++;
-            }
-            double[,] IC = A.Inverse();
-
-            double[,] B = new double[3, 6];
-            for (i = 0; i < 3; i++)
-            {
-                B[0, 2 * i + 0] = IC[1, i];
-                B[0, 2 * i + 1] = 0.0;
-                B[1, 2 * i + 0] = 0.0;
-                B[1, 2 * i + 1] = IC[2, i];
-                B[2, 2 * i + 0] = IC[2, i];
-                B[2, 2 * i + 1] = IC[1, i];
-            }
-            var stress = B.Dot(currentElementNodesMoves);
-            return Math.Sqrt(Math.Pow(stress[0], 2) + Math.Pow(stress[1], 2) - stress[0] * stress[1] + 3 * Math.Pow(stress[2], 2)) / 2;
-
-            if (OldCoords is null || OldCoords.Length == 0)
-            {
-                throw new InvalidOperationException("Перемещения не найдены.");
-            }
-
-            return 0;
-        }
-
-        public double GetStress(double[] allDisplacements, StressCoords stressCoords)
-        {
-            if (allDisplacements is null || allDisplacements.Length == 0)
+            if (Displacements is null || Displacements.Length == 0)
             {
                 throw new InvalidOperationException("Перемещения не расчитаны");
             }
 
-            var stressMatrix = InitMatrixForStress(allDisplacements, stressCoords);
-            var intensity = B.Dot(stressMatrix).Transpose().Dot(E);
-            return stressCoords switch
-            {
-                StressCoords.X => Math.Abs(intensity[0, 0]),
-                StressCoords.Y => Math.Abs(intensity[0, 1]),
-                StressCoords.XY => Math.Abs(intensity[0, 2]),
-                _ => 0,
-            };
+            Deformations = B.Dot(Displacements);
+            var deformationEq = Math.Sqrt(2) / 3 * Math.Sqrt(Math.Pow(Deformations[0] - Deformations[1], 2) + Math.Pow(Deformations[1], 2)
+                + Math.Pow(Deformations[0], 2) + 3 / 2 * Math.Pow(Deformations[2], 2));
+            return deformationEq;
         }
 
-        private double[,] OldCoords { get; set; }
+        public double GetStress()
+        {
+            if (Displacements is null || Displacements.Length == 0)
+            {
+                throw new InvalidOperationException("Перемещения не расчитаны");
+            }
+
+            var stress = E.Dot(Deformations);
+            return 1 / Math.Sqrt(2) * Math.Sqrt(Math.Pow(stress[0] - stress[1], 2) + Math.Pow(stress[1], 2) + Math.Pow(stress[0], 2) +
+                6 * Math.Pow(stress[2], 2));
+        }
 
         /// <summary>
         /// Матрица координат узлов конечного элемента.
@@ -149,7 +111,6 @@ namespace CourseWork.BLL.Models
                 var node3 = Nodes[2];
                 return new double[,]
                 {
-
                     { node2.Y - node3.Y, 0, node3.Y - node1.Y, 0, node1.Y - node2.Y, 0 },
                     { 0, node3.X - node2.X, 0, node1.X - node3.X, 0, node2.X - node1.X },
                     { node3.X - node2.X, node2.Y - node3.Y, node1.X - node3.X, node3.Y - node1.Y, node2.X - node1.X, node1.Y - node2.Y },
@@ -183,38 +144,6 @@ namespace CourseWork.BLL.Models
             return 0.5 * Math.Abs(A.Determinant());
         }
 
-        private double[,] InitMatrixForStress(double[] allDisplacements, StressCoords strain)
-        {
-            if (allDisplacements is null || allDisplacements.Length == 0)
-            {
-                throw new InvalidOperationException("Узлы или перемещения не расчитаны!");
-            }
-            StressMatrix = new double[6, 1];
-            switch (strain)
-            {
-                case StressCoords.X:
-                    StressMatrix[0, 0] = allDisplacements[Nodes[0].Id * 2];
-                    StressMatrix[2, 0] = allDisplacements[Nodes[1].Id * 2];
-                    StressMatrix[4, 0] = allDisplacements[Nodes[2].Id * 2];
-                    break;
-                case StressCoords.Y:
-                    StressMatrix[1, 0] = allDisplacements[Nodes[0].Id * 2 + 1];
-                    StressMatrix[3, 0] = allDisplacements[Nodes[1].Id * 2 + 1];
-                    StressMatrix[5, 0] = allDisplacements[Nodes[2].Id * 2 + 1];
-                    break;
-                case StressCoords.XY:
-                    StressMatrix[0, 0] = allDisplacements[Nodes[0].Id * 2];
-                    StressMatrix[1, 0] = allDisplacements[Nodes[0].Id * 2 + 1];
-                    StressMatrix[2, 0] = allDisplacements[Nodes[1].Id * 2];
-                    StressMatrix[3, 0] = allDisplacements[Nodes[1].Id * 2 + 1];
-                    StressMatrix[4, 0] = allDisplacements[Nodes[2].Id * 2];
-                    StressMatrix[5, 0] = allDisplacements[Nodes[2].Id * 2 + 1];
-                    break;
-            }
-
-            return StressMatrix;
-        }
-
         private void InitLocalMatrix()
         {
             if (Coefficients.PoissonRatio == 0 || Coefficients.Thickness == 0 || Coefficients.YoungModule == 0 || Coefficients.MeshStep == 0)
@@ -222,7 +151,7 @@ namespace CourseWork.BLL.Models
                 throw new InvalidOperationException("Коэффициент Пуассона и/или модуль Юнга и/или толщина элемента и/или шаг сетки не заданы");
             }
 
-            LocalMatrix = B.Transpose().Dot(E).Dot(B).Multiply(Coefficients.Thickness * GetSquare());
+            LocalMatrix = B.Transpose().Dot(E).Dot(B).Multiply(Coefficients.Thickness).Multiply(GetSquare());
         }
 
         public override bool Equals(object obj)

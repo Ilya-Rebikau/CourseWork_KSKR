@@ -39,7 +39,7 @@ namespace CourseWork.BLL.Services
             Coefficients.PoissonRatio = poissonRatioValue;
             Coefficients.Thickness = thicknessValue;
             Coefficients.MeshStep = (int)meshStepValue;
-            Coefficients.Force = forceValue;
+            Coefficients.Force = forceValue * 1000;
         }
     }
 }

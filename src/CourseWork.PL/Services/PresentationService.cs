@@ -10,41 +10,6 @@ namespace CourseWork.PL.Services
 {
     public static class PresentationService
     {
-        public static List<Node> GetNodesForApplicationForce(List<Node> nodes, List<InternalRectangle> rectangles)
-        {
-            if (rectangles is null || rectangles.Count != 2)
-            {
-                throw new ArgumentException("Прямоугольников должно быть 2!");
-            }
-
-            if (rectangles[0].CenterY > rectangles[1].CenterY)
-            {
-                var tmp = rectangles[0];
-                rectangles[0] = rectangles[1];
-                rectangles[1] = tmp;
-            }
-
-            var nodesForApplicationOfForce = new List<Node>();
-            foreach (var node in nodes)
-            {
-                if (rectangles[0].CenterX - rectangles[0].Rectangle.Width / 2 == node.X &&
-                    rectangles[0].CenterY - rectangles[0].Rectangle.Height / 2 <= node.Y &&
-                    rectangles[0].CenterY + rectangles[0].Rectangle.Height / 2 >= node.Y)
-                {
-                    nodesForApplicationOfForce.Add(node);
-                }
-
-                if (rectangles[1].CenterX + rectangles[1].Rectangle.Width / 2 == node.X &&
-                    rectangles[1].CenterY - rectangles[1].Rectangle.Height / 2 <= node.Y &&
-                    rectangles[1].CenterY + rectangles[1].Rectangle.Height / 2 >= node.Y)
-                {
-                    nodesForApplicationOfForce.Add(node);
-                }
-            }
-
-            return nodesForApplicationOfForce;
-        }
-
         public static List<Node> GetNodesForPinModel(List<Node> nodes, List<InternalRectangle> rectangles)
         {
             if (rectangles is null || rectangles.Count != 2)
@@ -56,14 +21,14 @@ namespace CourseWork.PL.Services
             var nodesForPin = new List<Node>();
             foreach (var node in nodes)
             {
-                if (rectangles[0].CenterX + rectangles[0].Rectangle.Width / 2 == node.X &&
+                if (rectangles[0].CenterX - rectangles[0].Rectangle.Width / 2 == node.X &&
                     rectangles[0].CenterY - rectangles[0].Rectangle.Height / 2 <= node.Y &&
                     rectangles[0].CenterY + rectangles[0].Rectangle.Height / 2 >= node.Y)
                 {
                     nodesForPin.Add(node);
                 }
 
-                if (rectangles[1].CenterX - rectangles[1].Rectangle.Width / 2 == node.X &&
+                if (rectangles[1].CenterX + rectangles[1].Rectangle.Width / 2 == node.X &&
                     rectangles[1].CenterY - rectangles[1].Rectangle.Height / 2 <= node.Y &&
                     rectangles[1].CenterY + rectangles[1].Rectangle.Height / 2 >= node.Y)
                 {
@@ -72,6 +37,40 @@ namespace CourseWork.PL.Services
             }
 
             return nodesForPin;
+        }
+
+        public static List<Node> GetNodesForApplicationForce(List<Node> nodes, List<InternalRectangle> rectangles)
+        {
+            if (rectangles is null || rectangles.Count != 2)
+            {
+                throw new ArgumentException("Прямоугольников должно быть 2!");
+            }
+
+            rectangles = rectangles.OrderBy(r => r.CenterY).ToList();
+            var nodesForApplicationForce = new List<Node>();
+            foreach (var node in nodes)
+            {
+                if (rectangles[0].CenterX + rectangles[0].Rectangle.Width / 2 == node.X &&
+                    rectangles[0].CenterY - rectangles[0].Rectangle.Height / 2 <= node.Y &&
+                    rectangles[0].CenterY + rectangles[0].Rectangle.Height / 2 >= node.Y)
+                {
+                    nodesForApplicationForce.Add(node);
+                }
+
+                if (rectangles[1].CenterX - rectangles[1].Rectangle.Width / 2 == node.X &&
+                    rectangles[1].CenterY - rectangles[1].Rectangle.Height / 2 <= node.Y &&
+                    rectangles[1].CenterY + rectangles[1].Rectangle.Height / 2 >= node.Y)
+                {
+                    nodesForApplicationForce.Add(node);
+                }
+            }
+            nodesForApplicationForce.OrderBy(n => n.Y);
+            var topNode = nodesForApplicationForce.First();
+            var botNode = nodesForApplicationForce.Last();
+            //TODO
+            nodesForApplicationForce.Add(nodes.First(n => n.X == topNode.X + Coefficients.MeshStep && n.Y == topNode.Y + Coefficients.MeshStep));
+            nodesForApplicationForce.Add(nodes.First(n => n.X == topNode.X - Coefficients.MeshStep && n.Y == topNode.Y - Coefficients.MeshStep));
+            return nodesForApplicationForce;
         }
 
         public static List<Node> GetNodesForTriangularFiniteElements(Circle circle, List<InternalRectangle> rectangles)
