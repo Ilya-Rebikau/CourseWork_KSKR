@@ -1,7 +1,9 @@
-﻿using CourseWork.BLL.Models;
+﻿using CourseWork.Bll.Models;
+using CourseWork.BLL.Models;
 using CourseWork.BLL.Services;
 using CourseWork.PL.Models;
 using CourseWork.PL.Services;
+using MeshImport;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,24 +28,28 @@ namespace CourseWork.PL
         private const double TermAfterLeftElement = 250;
         private double _rectangleWidth = 180;
         private const double RectangleHeight = 120;
-
-        private static TextBox _youngModuleTextBox;
-        private static TextBox _poissonRatioTextBox;
-        private static TextBox _thicknessTextBox;
+        private static ComboBox _materialsComboBox;
         private static TextBox _forceTextBox;
         private static ComboBox _meshStepComboBox;
-        private static Circle _outsideCircle;
         private static Circle _internalCircle;
         private static List<InternalRectangle> _rectangles;
-        private static Path _arcLeft;
-        private static Path _arcRight;
-        private static Line _topLine;
-        private static Line _botLine;
+        private static Line _forceTopLine;
+        private static Line _forceBotLine;
+        private static Line _pinTopLine;
+        private static Line _pinBotLine;
+        private static Rectangle _scale;
+        private static Label _minValue;
+        private static Label _midValue;
+        private static Label _maxValuel;
+        private static Line _minLine;
+        private static Line _midLine;
+        private static Line _maxLine;
         private List<Node> _nodes;
         private List<TriangularFiniteElement> _triangularFiniteElements;
         private Mesh _mesh;
         private List<Polygon> _polygons;
         private List<Line> _lines;
+        private List<Material> _materials;
 
         public MainWindow()
         {
@@ -53,37 +59,25 @@ namespace CourseWork.PL
                 3000, Brushes.Black, MainCanvas, 1.5);
             Drawer.DrawLine(0, 0, 3000, 0, Brushes.Black, MainCanvas);
 
-            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 50, 16, "Введите модуль Юнга, Па", MainCanvas);
-            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 90, 16, "Введите коэффициент Пуассона", MainCanvas);
-            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 130, 16, "Введите толщину элемента, м", MainCanvas);
+            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 50, 16, "Выберите материал", MainCanvas);
             Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 170, 16, "Введите прилагаемую силу, Н", MainCanvas);
 
-            _youngModuleTextBox = Drawer.DrawAndGetTextBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 50, 100, 16, "YoungModule", MainCanvas, "2e11");
-            _poissonRatioTextBox = Drawer.DrawAndGetTextBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 90, 100, 16, "PoissonRatio", MainCanvas, "0,3");
-            _thicknessTextBox = Drawer.DrawAndGetTextBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 130, 100, 16, "Thickness", MainCanvas, "0,001");
+            _materials = PresentationService.GetMaterials();
+            _materialsComboBox = Drawer.DrawAndGetComboBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 50, 100, 16, _materials.Select(m => m.Name).ToList(), MainCanvas);
             _forceTextBox = Drawer.DrawAndGetTextBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 170, 100, 16, "Force", MainCanvas, "10000");
 
             Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 210, 16, "Выберите размер сетки", MainCanvas);
             _meshStepComboBox = Drawer.DrawAndGetComboBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 210, 200, 16,
                 new List<string> { MeshStep.Крупная.ToString(), MeshStep.Средняя.ToString(), MeshStep.Мелкая.ToString() }, MainCanvas);
 
-            var coefficientsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 250, 600, 16, "Принять значения коэффициентов и размера сетки",
-                "CoefficientsButton", MainCanvas);
-            coefficientsButton.Click += new RoutedEventHandler(CoefficientsButton_Click);
-
-            var drawModelButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 290, 300, 16, "Отрисовать чертёж модели", "DrawModelButton", MainCanvas);
-            drawModelButton.Click += new RoutedEventHandler(DrawModelButton_Click);
-
-            var removeModelButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 290, 600, 16, "Стереть чертёж модели", "RemoveModelButton", MainCanvas);
-            removeModelButton.Click += new RoutedEventHandler(RemoveModelButton_Click);
+            var getTriangularFiniteElementsFromFileButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 270, 600, 16, "Получить сетку из файла.\nЗакрепить деталь и приложить силу.",
+                "FileButton", MainCanvas);
+            getTriangularFiniteElementsFromFileButton.Click += new RoutedEventHandler(GetTriangularFiniteElementsFromFileButton_Click);
 
             var getTriangularFiniteElementsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 330, 600, 16, "Разбить модель на треугольные конечные элементы.\n" +
-                "Отрисовать их.",
+                "Отрисовать их. Закрепить деталь и приложить силу.",
                 "DoMathButton", MainCanvas);
-            getTriangularFiniteElementsButton.Click += new RoutedEventHandler(DrawAndGetTriangularFiniteElementsButton_Click);
-
-            var showForceAndPinButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 390, 600, 16, "Закрепить деталь и приложить силу", "ShowForceAndPinButton", MainCanvas);
-            showForceAndPinButton.Click += new RoutedEventHandler(ShowForceAndPinButton_Click);
+            getTriangularFiniteElementsButton.Click += new RoutedEventHandler(DrawAndGetTriangularFiniteElementsPinAndForceDetailButton_Click);
 
             var displacementsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 430, 600, 16, "Определить перемещения", "Displacements", MainCanvas);
             displacementsButton.Click += new RoutedEventHandler(DisplacemenetsButton_Click);
@@ -99,7 +93,11 @@ namespace CourseWork.PL
         {
             try
             {
-                _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Деформации);
+                RemoveScale();
+                var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Деформации);
+                minmax.Item1 = minmax.Item1 * 2 * 10e-6;
+                minmax.Item2 = minmax.Item2 * 2 * 10e-6;
+                DrawScale(minmax);
                 RemoveOldElementsAndDrawNew();
             }
             catch (Exception ex)
@@ -110,7 +108,11 @@ namespace CourseWork.PL
 
         private void StressButton_Click(object sender, RoutedEventArgs e)
         {
-            _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Напряжения);
+            RemoveScale();
+            var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Напряжения);
+            minmax.Item1 = minmax.Item1 * 10e-6;
+            minmax.Item2 = minmax.Item2 * 10e-6;
+            DrawScale(minmax);
             RemoveOldElementsAndDrawNew();
         }
 
@@ -118,29 +120,12 @@ namespace CourseWork.PL
         {
             try
             {
-                _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Перемещения);
+                RemoveScale();
+                var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Перемещения);
+                minmax.Item1 = minmax.Item1 * 10e-9;
+                minmax.Item2 = minmax.Item2 * 10e-9;
+                DrawScale(minmax);
                 RemoveOldElementsAndDrawNew();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void ShowForceAndPinButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                _mesh = BllService.GetMesh(_nodes, _triangularFiniteElements, PresentationService.GetNodesForPinModel(_nodes, _rectangles),
-                    PresentationService.GetNodesForApplicationForce(_nodes, _rectangles));
-
-                DrawForceAndPin();
-
-                Drawer.DrawAndGetArcSegment(new Point(650, 150), new Size(250, 250),
-                    new Point(740, 300), Brushes.Black, MainCanvas);
-                Drawer.DrawLine(740, 300, 740, 280, Brushes.Black, MainCanvas);
-                Drawer.DrawLine(740, 300, 731, 282, Brushes.Black, MainCanvas);
-                Drawer.DrawLabel(700, 150, 18, "Момент силы", MainCanvas, 50);
             }
             catch (Exception ex)
             {
@@ -158,35 +143,31 @@ namespace CourseWork.PL
             var nodesForPinTop = nodesForPin.Take(nodesForPin.Count / 2).ToList();
             var nodesForPinBot = nodesForPin.Skip(nodesForPin.Count / 2).Take(nodesForPin.Count / 2).ToList();
 
-            Drawer.DrawLine(nodesForApplicationForceTop.First().X, nodesForApplicationForceTop.First().Y,
+            _forceTopLine = Drawer.DrawLine(nodesForApplicationForceTop.First().X, nodesForApplicationForceTop.First().Y,
                 nodesForApplicationForceTop.Last().X, nodesForApplicationForceTop.Last().Y, Brushes.Crimson, MainCanvas, 6);
-            Drawer.DrawLine(nodesForApplicationForceBot.First().X, nodesForApplicationForceBot.First().Y,
+            _forceBotLine = Drawer.DrawLine(nodesForApplicationForceBot.First().X, nodesForApplicationForceBot.First().Y,
                 nodesForApplicationForceBot.Last().X, nodesForApplicationForceBot.Last().Y, Brushes.Crimson, MainCanvas, 6);
 
-            Drawer.DrawLine(nodesForPinTop.First().X, nodesForPinTop.First().Y,
+            _pinTopLine = Drawer.DrawLine(nodesForPinTop.First().X, nodesForPinTop.First().Y,
                 nodesForPinTop.Last().X, nodesForPinTop.Last().Y, Brushes.Aqua, MainCanvas, 6);
-            Drawer.DrawLine(nodesForPinBot.First().X, nodesForPinBot.First().Y,
+            _pinBotLine = Drawer.DrawLine(nodesForPinBot.First().X, nodesForPinBot.First().Y,
                 nodesForPinBot.Last().X, nodesForPinBot.Last().Y, Brushes.Aqua, MainCanvas, 6);
         }
 
-        private void RemoveModelButton_Click(object sender, RoutedEventArgs e)
+        private void GetTriangularFiniteElementsFromFileButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var uiElements = new List<UIElement>
-                {
-                    _outsideCircle.Ellipse,
-                    _arcLeft,
-                    _arcRight,
-                    _topLine,
-                    _botLine,
-                };
-                foreach (var rectangle in _rectangles)
-                {
-                    uiElements.Add(rectangle.Rectangle);
-                }
-
-                Drawer.RemoveUIElements(uiElements, MainCanvas);
+                RemoveScale();
+                RemovePolygonsLinesForceAndPinLines();
+                BllService.SetCoefficients(_materials, _materialsComboBox.Text, _meshStepComboBox.Text, _forceTextBox.Text);
+                var meshImporter = new MeshImporter("nodes.xlsx", "elements.xlsx");
+                _mesh = meshImporter.GetFigureMesh();
+                _triangularFiniteElements = _mesh.TriangularFiniteElements;
+                _nodes = _mesh.Nodes;
+                _polygons = Drawer.FillTriangularFiniteElements(_mesh.TriangularFiniteElements, MainCanvas);
+                DrawForceAndPin();
+                DrawForceArc();
             }
             catch (Exception ex)
             {
@@ -194,37 +175,32 @@ namespace CourseWork.PL
             }
         }
 
-        private void DrawAndGetTriangularFiniteElementsButton_Click(object sender, RoutedEventArgs e)
+        private void DrawAndGetTriangularFiniteElementsPinAndForceDetailButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                var uiElements = new List<UIElement>();
-                if (_lines is not null || _polygons is not null)
-                {
-                    uiElements.AddRange(_lines);
-                    uiElements.AddRange(_polygons);
-                }
+                RemoveScale();
+                BllService.SetCoefficients(_materials, _materialsComboBox.Text, _meshStepComboBox.Text, _forceTextBox.Text);
+                SetRectangleWidth();
+                RemovePolygonsLinesForceAndPinLines();
 
-                Drawer.RemoveUIElements(uiElements, MainCanvas);
-                if (_internalCircle is null)
+                _internalCircle = Drawer.GetAndDrawCircle(CenterX, CenterY, InternalRadius * 2, Brushes.Black);
+                _rectangles = new List<InternalRectangle>
                 {
-                    _internalCircle = Drawer.GetAndDrawCircle(CenterX, CenterY, InternalRadius * 2, Brushes.Black);
-                }
-
-                if (_rectangles is null || _rectangles.Count == 0)
-                {
-                    _rectangles = new List<InternalRectangle>
-                    {
-                        Drawer.GetAndDrawRectangle(CenterX, CenterY - InternalRadius, _rectangleWidth, RectangleHeight, Brushes.Black),
-                        Drawer.GetAndDrawRectangle(CenterX, CenterY + InternalRadius, _rectangleWidth, RectangleHeight, Brushes.Black),
-                    };
-                }
+                    Drawer.GetAndDrawRectangle(CenterX, CenterY - InternalRadius, _rectangleWidth, RectangleHeight, Brushes.Black),
+                    Drawer.GetAndDrawRectangle(CenterX, CenterY + InternalRadius, _rectangleWidth, RectangleHeight, Brushes.Black),
+                };
 
                 _nodes = PresentationService.GetNodesForTriangularFiniteElements(_internalCircle, _rectangles);
                 var myLines = PresentationService.GetLinesForTriangularFiniteElements(_internalCircle, _rectangles, _nodes);
                 _triangularFiniteElements = TriangularFiniteElementsService.GetTriangularFiniteElements(myLines);
                 _polygons = Drawer.FillTriangularFiniteElements(_triangularFiniteElements, MainCanvas);
                 _lines = Drawer.DrawMyLines(myLines, MainCanvas);
+
+                _mesh = BllService.GetMesh(_nodes, _triangularFiniteElements, PresentationService.GetNodesForPinModel(_nodes, _rectangles),
+                    PresentationService.GetNodesForApplicationForce(_nodes, _rectangles));
+                DrawForceAndPin();
+                DrawForceArc();
             }
             catch (Exception ex)
             {
@@ -232,56 +208,15 @@ namespace CourseWork.PL
             }
         }
 
-        private void CoefficientsButton_Click(object sender, RoutedEventArgs e)
+        private void DrawForceArc()
         {
-            try
-            {
-                BllService.SetCoefficients(_youngModuleTextBox.Text, _poissonRatioTextBox.Text,
-                    _thicknessTextBox.Text, _meshStepComboBox.Text, _forceTextBox.Text);
-                MessageBox.Show("Коэффициенты успешно заданы.");
-                SetRectangleWidth();
-
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            Drawer.DrawAndGetArcSegment(new Point(650, 150), new Size(250, 250),
+                new Point(740, 300), Brushes.Black, MainCanvas);
+            Drawer.DrawLine(740, 300, 740, 280, Brushes.Black, MainCanvas);
+            Drawer.DrawLine(740, 300, 731, 282, Brushes.Black, MainCanvas);
+            Drawer.DrawLabel(700, 150, 18, "Момент силы", MainCanvas, 50);
         }
 
-        private void DrawModelButton_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                _outsideCircle = Drawer.GetAndDrawCircle(CenterX, CenterY, OutsideRadius * 2, Brushes.Black, MainCanvas);
-                _internalCircle = Drawer.GetAndDrawCircle(CenterX, CenterY, InternalRadius * 2, Brushes.Black);
-                SetRectangleWidth();
-                _rectangles = new List<InternalRectangle>
-                {
-                    Drawer.GetAndDrawRectangle(CenterX, CenterY - InternalRadius, _rectangleWidth, RectangleHeight, Brushes.Black, MainCanvas),
-                    Drawer.GetAndDrawRectangle(CenterX, CenterY + InternalRadius, _rectangleWidth, RectangleHeight, Brushes.Black, MainCanvas),
-                };
-                var x = 0;
-                var y = 0;
-                var y1 = Math.Pow(x - CenterX, 2) + Math.Pow(y - CenterY, 2);
-                //y = Math.Sqrt(240 * 240 - Math.Pow(270 - CenterX, 2)) + CenterY
-                double leftArcY = Math.Sqrt(Math.Pow(InternalRadius, 2) - Math.Pow(CenterX - _rectangleWidth / 2 - CenterY, 2));
-                double rightArcY = Math.Sqrt(Math.Pow(InternalRadius, 2) - Math.Pow(CenterX + _rectangleWidth / 2 - CenterY, 2));
-                _arcLeft = Drawer.DrawAndGetArcSegment(new Point(CenterX - _rectangleWidth / 2, leftArcY),
-                    new Size(InternalRadius, InternalRadius), new Point(CenterX - _rectangleWidth / 2, leftArcY),
-                    Brushes.Black, MainCanvas);
-                _arcRight = Drawer.DrawAndGetArcSegment(new Point(CenterX + _rectangleWidth / 2, rightArcY),
-                    new Size(InternalRadius, InternalRadius), new Point(CenterX + _rectangleWidth / 2, rightArcY),
-                    Brushes.Black, MainCanvas);
-                _topLine = Drawer.DrawLine(CenterX - _rectangleWidth / 2, CenterY - InternalRadius, CenterX + _rectangleWidth / 2,
-                    CenterY - InternalRadius, Brushes.Black, MainCanvas);
-                _botLine = Drawer.DrawLine(CenterX - _rectangleWidth / 2, CenterY + InternalRadius, CenterX + _rectangleWidth / 2,
-                    CenterY + InternalRadius, Brushes.Black, MainCanvas);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
         private void RemoveOldElementsAndDrawNew()
         {
             RemoveOldUIElements();
@@ -292,18 +227,7 @@ namespace CourseWork.PL
 
         private void RemoveOldUIElements()
         {
-            var uiElements = new List<UIElement>
-            {
-                _arcLeft,
-                _arcRight,
-                _topLine,
-                _botLine,
-            };
-            if (_outsideCircle is not null && _outsideCircle.Ellipse is not null)
-            {
-                uiElements.Add(_outsideCircle.Ellipse);
-            }
-
+            var uiElements = new List<UIElement>();
             if (_rectangles is not null && _rectangles.Count != 0)
             {
                 foreach (var rectangle in _rectangles)
@@ -312,10 +236,20 @@ namespace CourseWork.PL
                 }
             }
 
-            if (_lines is not null || _polygons is not null)
+            if (_lines is not null)
             {
                 uiElements.AddRange(_lines);
+            }
+
+            if (_polygons is not null)
+            {
                 uiElements.AddRange(_polygons);
+            }
+
+            if (_forceBotLine is not null || _forceTopLine is not null)
+            {
+                uiElements.Add(_forceBotLine);
+                uiElements.Add(_forceTopLine);
             }
 
             Drawer.RemoveUIElements(uiElements, MainCanvas);
@@ -343,6 +277,61 @@ namespace CourseWork.PL
             {
                 throw new InvalidOperationException("Шаг сетки не задан!");
             }
+        }
+
+        private void RemovePolygonsLinesForceAndPinLines()
+        {
+            var uiElements = new List<UIElement>();
+            if (_polygons is not null)
+            {
+                uiElements.AddRange(_polygons);
+            }
+
+            if (_lines is not null)
+            {
+                uiElements.AddRange(_lines);
+            }
+
+            if (_pinBotLine is not null || _pinTopLine is not null || _forceBotLine is not null || _forceTopLine is not null)
+            {
+                uiElements.Add(_pinBotLine);
+                uiElements.Add(_pinTopLine);
+                uiElements.Add(_forceBotLine);
+                uiElements.Add(_forceTopLine);
+            }
+
+            Drawer.RemoveUIElements(uiElements, MainCanvas);
+            _rectangles = null;
+        }
+
+        private void RemoveScale()
+        {
+            if (_scale is not null)
+            {
+                var uiElements = new List<UIElement>
+                {
+                    _scale,
+                    _minLine,
+                    _midLine,
+                    _maxLine,
+                    _minValue,
+                    _midValue,
+                    _maxValuel,
+                };
+
+                Drawer.RemoveUIElements(uiElements, MainCanvas);
+            }
+        }
+
+        private void DrawScale((double, double) minmax)
+        {
+            _scale = Drawer.GetAndDrawGradientScale(0, 50, minmax.Item1, minmax.Item2, 200, MainCanvas);
+            _minLine = Drawer.DrawLine(0, 50, 100, 50, Brushes.Black, MainCanvas, 3);
+            _minValue = Drawer.DrawLabel(21, 25, 14, minmax.Item2.ToString(), MainCanvas);
+            _midLine = Drawer.DrawLine(0, 150, 100, 150, Brushes.Black, MainCanvas, 3);
+            _midValue = Drawer.DrawLabel(21, 125, 14, ((minmax.Item2 - minmax.Item1) / 2).ToString(), MainCanvas);
+            _maxLine = Drawer.DrawLine(0, 250, 100, 250, Brushes.Black, MainCanvas, 3);
+            _maxValuel = Drawer.DrawLabel(21, 225, 14, minmax.Item1.ToString(), MainCanvas);
         }
     }
 }

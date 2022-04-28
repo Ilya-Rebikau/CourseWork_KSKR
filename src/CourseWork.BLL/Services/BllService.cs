@@ -1,4 +1,5 @@
-﻿using CourseWork.BLL.Models;
+﻿using CourseWork.Bll.Models;
+using CourseWork.BLL.Models;
 
 namespace CourseWork.BLL.Services
 {
@@ -17,29 +18,26 @@ namespace CourseWork.BLL.Services
             return mesh;
         }
 
-        public static void SetCoefficients(string youngModule, string poissonRatio, string thickness, string meshStep, string force)
+        public static void SetCoefficients(List<Material> materials, string materialName, string meshStep, string force)
         {
-            if (string.IsNullOrWhiteSpace(youngModule) || string.IsNullOrWhiteSpace(poissonRatio) ||
-                string.IsNullOrWhiteSpace(thickness) || string.IsNullOrWhiteSpace(meshStep) || string.IsNullOrWhiteSpace(force))
+            if (string.IsNullOrWhiteSpace(materialName) || string.IsNullOrWhiteSpace(meshStep) || string.IsNullOrWhiteSpace(force))
             {
-                throw new ArgumentException("Коэффициенты не заданы!");
+                throw new ArgumentException("Материал или сила или размер сетки не заданы!");
             }
 
-            var youngModuleParseResult = double.TryParse(youngModule, out var youngModuleValue);
-            var poissonRatioParseResult = double.TryParse(poissonRatio, out var poissonRatioValue);
-            var thicknessParseResult = double.TryParse(thickness, out var thicknessValue);
+            var material = materials.SingleOrDefault(m => m.Name == materialName);
             var meshStepParseResult = Enum.TryParse(meshStep, out MeshStep meshStepValue);
             var forceParseResult = double.TryParse(force, out var forceValue);
-            if (!youngModuleParseResult || !poissonRatioParseResult || !thicknessParseResult || !meshStepParseResult || !forceParseResult)
+            if (!meshStepParseResult || !forceParseResult)
             {
                 throw new InvalidCastException("Коэффициенты введены неверно!");
             }
 
-            Coefficients.YoungModule = youngModuleValue;
-            Coefficients.PoissonRatio = poissonRatioValue;
-            Coefficients.Thickness = thicknessValue;
+            Coefficients.YoungModule = material.YoungModule;
+            Coefficients.PoissonRatio = material.PoissonRatio;
+            Coefficients.Thickness = 0.001;
             Coefficients.MeshStep = (int)meshStepValue;
-            Coefficients.Force = forceValue * 1000;
+            Coefficients.Force = forceValue * 10000;
         }
     }
 }

@@ -2,6 +2,14 @@
 {
     public class Node
     {
+        public Node() 
+        { }
+        public Node(int id, double x, double y)
+        {
+            Id = id;
+            X = x;
+            Y = y;
+        }
         public int Id { get; set; }
 
         public double X { get; set; }

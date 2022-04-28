@@ -5,7 +5,14 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CourseWork.PL", "src\CourseWork.PL\CourseWork.PL.csproj", "{6FFFE8D6-FA54-489B-AA70-1A1C92D6671E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CourseWork.BLL", "src\CourseWork.BLL\CourseWork.BLL.csproj", "{B4DA8796-32BA-40FB-8D97-76B145CE511F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CourseWork.BLL", "src\CourseWork.BLL\CourseWork.BLL.csproj", "{B4DA8796-32BA-40FB-8D97-76B145CE511F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{B26D9087-B60B-4CA2-BFDA-AB070CDF83FB}"
+	ProjectSection(SolutionItems) = preProject
+		data\elements.xlsx = data\elements.xlsx
+		src\CourseWork.PL\Materials.json = src\CourseWork.PL\Materials.json
+		data\nodes.xlsx = data\nodes.xlsx
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,42 @@
+[
+  {
+    "Name": "Сталь",
+    "PoissonRatio": 0.3,
+    "YoungModule": 2e11
+  },
+  {
+    "Name": "Алюминий",
+    "PoissonRatio": 0.34,
+    "YoungModule": 7e10
+  },
+  {
+    "Name": "Чугун",
+    "PoissonRatio": 0.25,
+    "YoungModule": 1.15e11
+  },
+  {
+    "Name": "Свинец",
+    "PoissonRatio": 0.44,
+    "YoungModule": 1.6e10
+  },
+  {
+    "Name": "Железо",
+    "PoissonRatio": 0.29,
+    "YoungModule": 1.9e11
+  },
+  {
+    "Name": "Медь",
+    "PoissonRatio": 0.35,
+    "YoungModule": 1.1e11
+  },
+  {
+    "Name": "Олово",
+    "PoissonRatio": 0.44,
+    "YoungModule": 3.5e10
+  },
+  {
+    "Name": "Бронза",
+    "PoissonRatio": 0.23,
+    "YoungModule": 1e10
+  }
+]

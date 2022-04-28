@@ -1,12 +1,13 @@
 ﻿using Accord.Math;
 using CourseWork.BLL.Services;
-using System.Diagnostics;
 using System.Drawing;
 
 namespace CourseWork.BLL.Models
 {
     public class Mesh
     {
+        private bool _wasMoved = false;
+
         public Mesh(List<Node> nodes, List<TriangularFiniteElement> triangularFiniteElements)
         {
             if (nodes is null || nodes.Count == 0 || triangularFiniteElements is null || triangularFiniteElements.Count == 0)
@@ -147,42 +148,25 @@ namespace CourseWork.BLL.Models
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>")]
-        public void GiveColorsToFiniteElemenets(MeshPaintCharacteristicType type)
+        public (double, double) GiveColorsToFiniteElemenets(MeshPaintCharacteristicType type)
         {
             if (TriangularFiniteElements is null || TriangularFiniteElements.Count == 0 ||
                 Displacements is null || Displacements.Length == 0)
             {
                 throw new InvalidOperationException("Не найдены конечные элементы или общие перемещения!");
             }
-            double minCharacteristic = double.MaxValue;
-            double maxCharacteristic = double.MinValue;
-            foreach (var el in TriangularFiniteElements)
-            {
-                double characteristic = 0;
-                switch (type)
-                {
-                    case MeshPaintCharacteristicType.Перемещения:
-                        characteristic = el.GetDisplacements(Displacements);
-                        break;
-                    case MeshPaintCharacteristicType.Деформации:
-                        characteristic = el.GetDeformation();
-                        break;
-                    case MeshPaintCharacteristicType.Напряжения:
-                        characteristic = el.GetStress();
-                        break;
-                }
-                if (characteristic < minCharacteristic)
-                {
-                    minCharacteristic = characteristic;
-                }
 
-                if (characteristic > maxCharacteristic)
+            if (_wasMoved is false)
+            {
+                foreach (var node in Nodes)
                 {
-                    maxCharacteristic = characteristic;
+                    node.X += Displacements[node.Id * 2];
+                    node.Y += Displacements[node.Id * 2 + 1];
                 }
+                _wasMoved = true;
             }
 
-            var x = new List<double>();
+            var characteristics = new List<double>();
             foreach (var el in TriangularFiniteElements)
             {
                 double characteristic = 0;
@@ -198,10 +182,30 @@ namespace CourseWork.BLL.Models
                         characteristic = el.GetStress();
                         break;
                 }
-                x.Add(characteristic);
+                characteristics.Add(characteristic);
+            }
+            var minCharacteristic = characteristics.Min();
+            var maxCharacteristic = characteristics.Max();
+            foreach (var el in TriangularFiniteElements)
+            {
+                double characteristic = 0;
+                switch (type)
+                {
+                    case MeshPaintCharacteristicType.Перемещения:
+                        characteristic = el.GetDisplacements(Displacements);
+                        break;
+                    case MeshPaintCharacteristicType.Деформации:
+                        characteristic = el.GetDeformation();
+                        break;
+                    case MeshPaintCharacteristicType.Напряжения:
+                        characteristic = el.GetStress();
+                        break;
+                }
                 byte[] RGB = GradientMaker.GetRGBGradientValue(minCharacteristic, maxCharacteristic, characteristic);
                 el.Color = new SolidBrush(Color.FromArgb(200, RGB[0], RGB[1], RGB[2]));
             }
+
+            return (minCharacteristic, maxCharacteristic);
         }
     }
 }

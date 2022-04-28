@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -10,6 +11,39 @@ namespace CourseWork.PL.Services
 {
     internal class Drawer
     {
+        public static Rectangle GetAndDrawGradientScale(double x, double y, double minValue, double maxValue, double height, Canvas cv)
+        {
+            var myLinearGradientBrush = new LinearGradientBrush();
+
+            double ratio = 0;
+            byte B = (byte)Math.Max(0, 255 * (1 - ratio));
+            byte R = (byte)Math.Max(0, 255 * (ratio - 1));
+            byte G = (byte)(255 - B - R);
+            myLinearGradientBrush.GradientStops.Add(new GradientStop(Color.FromRgb(R, G, B), 0));
+            ratio = 2 * ((maxValue - minValue) / 2 - minValue) / (maxValue - minValue);
+            B = (byte)Math.Max(0, 255 * (1 - ratio));
+            R = (byte)Math.Max(0, 255 * (ratio - 1));
+            G = (byte)(255 - B - R);
+            myLinearGradientBrush.GradientStops.Add(new GradientStop(Color.FromRgb(R, G, B), 0.5));
+            ratio = 2;
+            B = (byte)Math.Max(0, 255 * (1 - ratio));
+            R = (byte)Math.Max(0, 255 * (ratio - 1));
+            G = (byte)(255 - B - R);
+            myLinearGradientBrush.GradientStops.Add(new GradientStop(Color.FromRgb(R, G, B), 1));
+
+            var rectangle = new Rectangle
+            {
+                Width = 20,
+                Height = height
+            };
+            myLinearGradientBrush.StartPoint = new Point(0, 1);
+            myLinearGradientBrush.EndPoint = new Point(0, 0);
+            rectangle.Fill = myLinearGradientBrush;
+            Canvas.SetLeft(rectangle, x);
+            Canvas.SetTop(rectangle, y);
+            cv.Children.Add(rectangle);
+            return rectangle;
+        }
         public static List<Polygon> FillTriangularFiniteElements(List<TriangularFiniteElement> triangularFiniteElements,
             Canvas cv, double strokeThickness = 0)
         {
@@ -94,7 +128,7 @@ namespace CourseWork.PL.Services
             return path;
         }
 
-        public static void DrawLabel(double x, double y, double fontSize, string content, Canvas cv, double angle = 0)
+        public static Label DrawLabel(double x, double y, double fontSize, string content, Canvas cv, double angle = 0)
         {
             var label = new Label()
             {
@@ -109,6 +143,7 @@ namespace CourseWork.PL.Services
             Canvas.SetLeft(label, x);
             Canvas.SetTop(label, y);
             cv.Children.Add(label);
+            return label;
         }
 
         public static TextBox DrawAndGetTextBox(double x, double y, double width, double fontSize, string name, Canvas cv, string text = null)
@@ -148,7 +183,7 @@ namespace CourseWork.PL.Services
             {
                 var node1 = line.Nodes[0];
                 var node2 = line.Nodes[1];
-                lines.Add(DrawLine(node1.X, node1.Y, node2.X, node2.Y, Brushes.Green, cv, 2));
+                lines.Add(DrawLine(node1.X, node1.Y, node2.X, node2.Y, Brushes.Black, cv, 1));
             }
 
             return lines;

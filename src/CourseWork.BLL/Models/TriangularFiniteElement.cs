@@ -29,16 +29,8 @@ namespace CourseWork.BLL.Models
 
         public double[] Deformations { get; private set; }
 
-        private double[,] OldCoords { get; set; }
-
         public double GetDisplacements(double[] allDisplacements)
         {
-            OldCoords = new double[,]
-            {
-                { Nodes[0].X, Nodes[0].Y },
-                { Nodes[1].X, Nodes[1].Y },
-                { Nodes[2].X, Nodes[2].Y },
-            };
             double[] currentElementNodesDisplacements = new double[6];
             int i = 0;
             foreach (var node in Nodes)
@@ -48,17 +40,10 @@ namespace CourseWork.BLL.Models
                 i++;
             }
             Displacements = currentElementNodesDisplacements;
-            i = 0;
-            foreach (var node in Nodes)
-            {
-                node.X += Displacements[i];
-                node.Y += Displacements[i + 1];
-                i += 2;
-            }
             double displacement = 0;
             for (i = 0; i < 3; i++)
             {
-                displacement += Math.Abs(Math.Pow(OldCoords[i, 0] - Nodes[i].X, 2) + Math.Pow(OldCoords[i, 1] - Nodes[i].Y, 2));
+                displacement += Math.Sqrt(Math.Pow(currentElementNodesDisplacements[i * 2], 2) + Math.Pow(currentElementNodesDisplacements[i * 2 + 1], 2));
             }
 
             return displacement;

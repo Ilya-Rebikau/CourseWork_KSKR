@@ -1,15 +1,26 @@
-﻿using CourseWork.BLL.Models;
+﻿using CourseWork.Bll.Models;
+using CourseWork.BLL.Models;
 using CourseWork.BLL.Services;
 using CourseWork.PL.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Windows;
+using System.Text;
 
 namespace CourseWork.PL.Services
 {
     public static class PresentationService
     {
+        public static List<Material> GetMaterials()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            var json = File.ReadAllText(@"../../../../../data/Materials.json", Encoding.GetEncoding(1251));
+            var materials = JsonConvert.DeserializeObject<List<Material>>(json);
+            return materials;
+        }
+
         public static List<Node> GetNodesForPinModel(List<Node> nodes, List<InternalRectangle> rectangles)
         {
             if (rectangles is null || rectangles.Count != 2)
@@ -65,11 +76,6 @@ namespace CourseWork.PL.Services
                 }
             }
             nodesForApplicationForce.OrderBy(n => n.Y);
-            var topNode = nodesForApplicationForce.First();
-            var botNode = nodesForApplicationForce.Last();
-            //TODO
-            nodesForApplicationForce.Add(nodes.First(n => n.X == topNode.X + Coefficients.MeshStep && n.Y == topNode.Y + Coefficients.MeshStep));
-            nodesForApplicationForce.Add(nodes.First(n => n.X == topNode.X - Coefficients.MeshStep && n.Y == topNode.Y - Coefficients.MeshStep));
             return nodesForApplicationForce;
         }
 
