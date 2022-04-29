@@ -2,41 +2,31 @@
   {
     "Name": "Сталь",
     "PoissonRatio": 0.3,
-    "YoungModule": 2e11
+    "YoungModule": 2e11,
+    "MaxStress": 110e6
   },
   {
     "Name": "Алюминий",
     "PoissonRatio": 0.34,
-    "YoungModule": 7e10
+    "YoungModule": 7e10,
+    "MaxStress": 25e6
   },
   {
     "Name": "Чугун",
     "PoissonRatio": 0.25,
-    "YoungModule": 1.15e11
-  },
-  {
-    "Name": "Свинец",
-    "PoissonRatio": 0.44,
-    "YoungModule": 1.6e10
-  },
-  {
-    "Name": "Железо",
-    "PoissonRatio": 0.29,
-    "YoungModule": 1.9e11
+    "YoungModule": 1.15e11,
+    "MaxStress": 320e6
   },
   {
     "Name": "Медь",
     "PoissonRatio": 0.35,
-    "YoungModule": 1.1e11
-  },
-  {
-    "Name": "Олово",
-    "PoissonRatio": 0.44,
-    "YoungModule": 3.5e10
+    "YoungModule": 1.1e11,
+    "MaxStress": 30e6
   },
   {
     "Name": "Бронза",
     "PoissonRatio": 0.23,
-    "YoungModule": 1e10
+    "YoungModule": 1e10,
+    "MaxStress": 50e6
   }
 ]

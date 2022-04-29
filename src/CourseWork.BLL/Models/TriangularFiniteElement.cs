@@ -64,9 +64,9 @@ namespace CourseWork.BLL.Models
 
         public double GetStress()
         {
-            if (Displacements is null || Displacements.Length == 0)
+            if (Deformations is null || Deformations.Length == 0)
             {
-                throw new InvalidOperationException("Перемещения не расчитаны");
+                throw new InvalidOperationException("Деформации не расчитаны");
             }
 
             var stress = E.Dot(Deformations);

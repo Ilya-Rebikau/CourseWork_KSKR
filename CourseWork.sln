@@ -10,7 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "data", "data", "{B26D9087-B60B-4CA2-BFDA-AB070CDF83FB}"
 	ProjectSection(SolutionItems) = preProject
 		data\elements.xlsx = data\elements.xlsx
-		src\CourseWork.PL\Materials.json = src\CourseWork.PL\Materials.json
+		data\Materials.json = data\Materials.json
 		data\nodes.xlsx = data\nodes.xlsx
 	EndProjectSection
 EndProject

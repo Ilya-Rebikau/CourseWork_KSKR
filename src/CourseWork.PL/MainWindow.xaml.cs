@@ -40,7 +40,7 @@ namespace CourseWork.PL
         private static Rectangle _scale;
         private static Label _minValue;
         private static Label _midValue;
-        private static Label _maxValuel;
+        private static Label _maxValue;
         private static Line _minLine;
         private static Line _midLine;
         private static Line _maxLine;
@@ -60,33 +60,41 @@ namespace CourseWork.PL
             Drawer.DrawLine(0, 0, 3000, 0, Brushes.Black, MainCanvas);
 
             Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 50, 16, "Выберите материал", MainCanvas);
-            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 170, 16, "Введите прилагаемую силу, Н", MainCanvas);
-
             _materials = PresentationService.GetMaterials();
             _materialsComboBox = Drawer.DrawAndGetComboBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 50, 100, 16, _materials.Select(m => m.Name).ToList(), MainCanvas);
-            _forceTextBox = Drawer.DrawAndGetTextBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 170, 100, 16, "Force", MainCanvas, "10000");
+            
+            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 90, 16, "Введите прилагаемую силу, Н", MainCanvas);
+            _forceTextBox = Drawer.DrawAndGetTextBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 90, 100, 16, "Force", MainCanvas, "10000");
 
-            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 210, 16, "Выберите размер сетки", MainCanvas);
-            _meshStepComboBox = Drawer.DrawAndGetComboBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 210, 200, 16,
+            Drawer.DrawLabel(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 130, 16, "Выберите размер сетки", MainCanvas);
+            _meshStepComboBox = Drawer.DrawAndGetComboBox(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 130, 200, 16,
                 new List<string> { MeshStep.Крупная.ToString(), MeshStep.Средняя.ToString(), MeshStep.Мелкая.ToString() }, MainCanvas);
 
-            var getTriangularFiniteElementsFromFileButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 270, 600, 16, "Получить сетку из файла.\nЗакрепить деталь и приложить силу.",
+            var getTriangularFiniteElementsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 200, 600, 16, "Разбить модель на треугольные конечные\nэлементы. " +
+                "Отрисовать их. Закрепить\nдеталь и приложить силу.",
+                "DoMathButton", MainCanvas);
+            getTriangularFiniteElementsButton.Click += new RoutedEventHandler(DrawAndGetTriangularFiniteElementsPinAndForceDetailButton_Click);
+            
+            var getTriangularFiniteElementsFromFileButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine + 350, 200, 600, 16, "Получить сетку из файла.\nЗакрепить деталь и приложить силу.",
                 "FileButton", MainCanvas);
             getTriangularFiniteElementsFromFileButton.Click += new RoutedEventHandler(GetTriangularFiniteElementsFromFileButton_Click);
 
-            var getTriangularFiniteElementsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 330, 600, 16, "Разбить модель на треугольные конечные элементы.\n" +
-                "Отрисовать их. Закрепить деталь и приложить силу.",
-                "DoMathButton", MainCanvas);
-            getTriangularFiniteElementsButton.Click += new RoutedEventHandler(DrawAndGetTriangularFiniteElementsPinAndForceDetailButton_Click);
-
-            var displacementsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 430, 600, 16, "Определить перемещения", "Displacements", MainCanvas);
+            var displacementsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 300, 600, 16, "Определить перемещения", "Displacements", MainCanvas);
             displacementsButton.Click += new RoutedEventHandler(DisplacemenetsButton_Click);
 
-            var deformationsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 470, 600, 16, "Определить деформации", "Deformations", MainCanvas);
+            var deformationsButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 340, 600, 16, "Определить деформации", "Deformations", MainCanvas);
             deformationsButton.Click += new RoutedEventHandler(DeformationsButton_Click);
 
-            var stressButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 510, 600, 16, "Определить напряжения", "Stress", MainCanvas);
+            var stressButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 380, 600, 16, "Определить напряжения", "Stress", MainCanvas);
             stressButton.Click += new RoutedEventHandler(StressButton_Click);
+
+            var findSizeButton = Drawer.DrawAndGetButton(CenterX + OutsideRadius + MenuLineTerm + TermAfterMenuLine, 420, 600, 16, "Определить размеры детали", "sizes", MainCanvas);
+            findSizeButton.Click += new RoutedEventHandler(FindSizeButton_Click);
+        }
+
+        private void FindSizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            
         }
 
         private void DeformationsButton_Click(object sender, RoutedEventArgs e)
@@ -95,8 +103,8 @@ namespace CourseWork.PL
             {
                 RemoveScale();
                 var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Деформации);
-                minmax.Item1 = minmax.Item1 * 2 * 10e-6;
-                minmax.Item2 = minmax.Item2 * 2 * 10e-6;
+                minmax.Item1 = minmax.Item1 * 2 * 10e-3;
+                minmax.Item2 = minmax.Item2 * 2 * 10e-3;
                 DrawScale(minmax);
                 RemoveOldElementsAndDrawNew();
             }
@@ -108,12 +116,19 @@ namespace CourseWork.PL
 
         private void StressButton_Click(object sender, RoutedEventArgs e)
         {
-            RemoveScale();
-            var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Напряжения);
-            minmax.Item1 = minmax.Item1 * 10e-6;
-            minmax.Item2 = minmax.Item2 * 10e-6;
-            DrawScale(minmax);
-            RemoveOldElementsAndDrawNew();
+            try
+            {
+                RemoveScale();
+                var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Напряжения);
+                minmax.Item1 *= 10e-3;
+                minmax.Item2 *= 10e-3;
+                DrawScale(minmax);
+                RemoveOldElementsAndDrawNew();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void DisplacemenetsButton_Click(object sender, RoutedEventArgs e)
@@ -122,8 +137,8 @@ namespace CourseWork.PL
             {
                 RemoveScale();
                 var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Перемещения);
-                minmax.Item1 = minmax.Item1 * 10e-9;
-                minmax.Item2 = minmax.Item2 * 10e-9;
+                minmax.Item1 *= 10e-6;
+                minmax.Item2 *= 10e-6;
                 DrawScale(minmax);
                 RemoveOldElementsAndDrawNew();
             }
@@ -316,7 +331,7 @@ namespace CourseWork.PL
                     _maxLine,
                     _minValue,
                     _midValue,
-                    _maxValuel,
+                    _maxValue,
                 };
 
                 Drawer.RemoveUIElements(uiElements, MainCanvas);
@@ -326,12 +341,11 @@ namespace CourseWork.PL
         private void DrawScale((double, double) minmax)
         {
             _scale = Drawer.GetAndDrawGradientScale(0, 50, minmax.Item1, minmax.Item2, 200, MainCanvas);
-            _minLine = Drawer.DrawLine(0, 50, 100, 50, Brushes.Black, MainCanvas, 3);
+            _minLine = Drawer.DrawLine(0, 50, 180, 50, Brushes.Black, MainCanvas, 3);
             _minValue = Drawer.DrawLabel(21, 25, 14, minmax.Item2.ToString(), MainCanvas);
-            _midLine = Drawer.DrawLine(0, 150, 100, 150, Brushes.Black, MainCanvas, 3);
+            _midLine = Drawer.DrawLine(0, 150, 180, 150, Brushes.Black, MainCanvas, 3);
             _midValue = Drawer.DrawLabel(21, 125, 14, ((minmax.Item2 - minmax.Item1) / 2).ToString(), MainCanvas);
-            _maxLine = Drawer.DrawLine(0, 250, 100, 250, Brushes.Black, MainCanvas, 3);
-            _maxValuel = Drawer.DrawLabel(21, 225, 14, minmax.Item1.ToString(), MainCanvas);
+            _maxLine = Drawer.DrawLine(0, 250, 180, 250, Brushes.Black, MainCanvas, 3);
         }
     }
 }
