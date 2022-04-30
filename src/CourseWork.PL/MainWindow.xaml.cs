@@ -220,7 +220,7 @@ namespace CourseWork.PL
                 _findSizeButton.IsEnabled = false;
                 RemoveScale();
                 RemovePolygonsLinesForceAndPinLines();
-                BllService.SetCoefficients(_materials, _materialsComboBox.Text, "Мелкая", _forceTextBox.Text);
+                BllService.SetCoefficients(_materials, _materialsComboBox.Text, MeshStep.Мелкая.ToString(), _forceTextBox.Text);
                 var meshImporter = new MeshImporter("nodes.xlsx", "elements.xlsx");
                 _mesh = meshImporter.GetFigureMesh();
                 _triangularFiniteElements = _mesh.TriangularFiniteElements;
