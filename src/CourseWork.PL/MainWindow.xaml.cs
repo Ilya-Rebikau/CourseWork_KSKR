@@ -181,8 +181,8 @@ namespace CourseWork.PL
             {
                 RemoveScale();
                 var minmax = _mesh.GiveColorsToFiniteElemenets(MeshPaintCharacteristicType.Перемещения);
-                minmax.Item1 *= 1e-5;
-                minmax.Item2 *= 1e-5;
+                minmax.Item1 *= 1e-2;
+                minmax.Item2 *= 1e-2;
                 DrawScale(minmax);
                 RemoveOldElementsAndDrawNew();
             }
