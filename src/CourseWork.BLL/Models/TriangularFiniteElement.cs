@@ -110,7 +110,7 @@ namespace CourseWork.BLL.Models
         {
             get
             {
-                var multiplier = Coefficients.YoungModule / ((1 - 2 * Coefficients.PoissonRatio) * (1 + Coefficients.PoissonRatio));
+                var multiplier = Coefficients.YoungModule * 1e-6 / ((1 - 2 * Coefficients.PoissonRatio) * (1 + Coefficients.PoissonRatio));
                 return new double[,]
                 {
                     { 1 - Coefficients.PoissonRatio, Coefficients.PoissonRatio, 0 },
@@ -124,7 +124,7 @@ namespace CourseWork.BLL.Models
         /// Площадь конечного элемента.
         /// </summary>
         /// <returns>Площадь.</returns>
-        private double GetSquare()
+        public double GetSquare()
         {
             return 0.5 * Math.Abs(A.Determinant());
         }

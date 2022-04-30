@@ -35,9 +35,9 @@ namespace CourseWork.BLL.Services
 
             Coefficients.YoungModule = material.YoungModule;
             Coefficients.PoissonRatio = material.PoissonRatio;
-            Coefficients.Thickness = 0.001;
+            Coefficients.Thickness = 1;
             Coefficients.MeshStep = (int)meshStepValue;
-            Coefficients.Force = forceValue * 10000;
+            Coefficients.Force = forceValue * 10;
         }
     }
 }
