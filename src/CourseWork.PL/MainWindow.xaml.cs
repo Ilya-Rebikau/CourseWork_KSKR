@@ -44,6 +44,7 @@ namespace CourseWork.PL
         private static Line _minLine;
         private static Line _midLine;
         private static Line _maxLine;
+        private static Button _findSizeButton;
         private List<Node> _nodes;
         private List<TriangularFiniteElement> _triangularFiniteElements;
         private Mesh _mesh;
@@ -61,7 +62,7 @@ namespace CourseWork.PL
 
             Drawer.DrawLabel(CenterX + MenuLineTerm + TermAfterMenuLine, 50, 16, "Выберите материал", MainCanvas);
             _materials = PresentationService.GetMaterials();
-            _materialsComboBox = Drawer.DrawAndGetComboBox(CenterX + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 50, 100, 16, _materials.Select(m => m.Name).ToList(), MainCanvas);
+            _materialsComboBox = Drawer.DrawAndGetComboBox(CenterX + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 50, 150, 16, _materials.Select(m => m.Name).ToList(), MainCanvas);
             
             Drawer.DrawLabel(CenterX + MenuLineTerm + TermAfterMenuLine, 90, 16, "Введите прилагаемую силу, Н", MainCanvas);
             _forceTextBox = Drawer.DrawAndGetTextBox(CenterX + MenuLineTerm + TermAfterMenuLine + TermAfterLeftElement, 90, 100, 16, "Force", MainCanvas, "10000");
@@ -79,17 +80,17 @@ namespace CourseWork.PL
                 "FileButton", MainCanvas);
             getTriangularFiniteElementsFromFileButton.Click += new RoutedEventHandler(GetTriangularFiniteElementsFromFileButton_Click);
 
-            var displacementsButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 300, 600, 16, "Определить перемещения", "Displacements", MainCanvas);
+            var displacementsButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 300, 600, 16, "Определить перемещения, мм", "Displacements", MainCanvas);
             displacementsButton.Click += new RoutedEventHandler(DisplacemenetsButton_Click);
 
-            var deformationsButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 340, 600, 16, "Определить деформации", "Deformations", MainCanvas);
+            var deformationsButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 340, 600, 16, "Определить деформации, мм/мм", "Deformations", MainCanvas);
             deformationsButton.Click += new RoutedEventHandler(DeformationsButton_Click);
 
-            var stressButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 380, 600, 16, "Определить напряжения", "Stress", MainCanvas);
+            var stressButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 380, 600, 16, "Определить напряжения, Н/мм^2", "Stress", MainCanvas);
             stressButton.Click += new RoutedEventHandler(StressButton_Click);
 
-            var findSizeButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 420, 600, 16, "Определить размеры детали", "sizes", MainCanvas);
-            findSizeButton.Click += new RoutedEventHandler(FindSizeButton_Click);
+            _findSizeButton = Drawer.DrawAndGetButton(CenterX + MenuLineTerm + TermAfterMenuLine, 420, 600, 16, "Определить размеры детали", "Sizes", MainCanvas);
+            _findSizeButton.Click += new RoutedEventHandler(FindSizeButton_Click);
         }
 
         private void FindSizeButton_Click(object sender, RoutedEventArgs e)
@@ -112,7 +113,7 @@ namespace CourseWork.PL
                     _nodes = PresentationService.GetNodesForTriangularFiniteElements(_internalCircle, _rectangles);
                     var myLines = PresentationService.GetLinesForTriangularFiniteElements(_internalCircle, _rectangles, _nodes);
                     _triangularFiniteElements = TriangularFiniteElementsService.GetTriangularFiniteElements(myLines);
-                    var newElementSquare = (Coefficients.Force / (material.MaxStress * 1e-6));
+                    var newElementSquare = Coefficients.Force / (material.MaxStress * 1e-6);
                     var oldElementSquare = _triangularFiniteElements.First().GetSquare();
                     var difference = newElementSquare / oldElementSquare + 1;
                     var oldCircleSquare = Math.PI * _internalRadius * _internalRadius;
@@ -216,9 +217,10 @@ namespace CourseWork.PL
         {
             try
             {
+                _findSizeButton.IsEnabled = false;
                 RemoveScale();
                 RemovePolygonsLinesForceAndPinLines();
-                BllService.SetCoefficients(_materials, _materialsComboBox.Text, _meshStepComboBox.Text, _forceTextBox.Text);
+                BllService.SetCoefficients(_materials, _materialsComboBox.Text, "Мелкая", _forceTextBox.Text);
                 var meshImporter = new MeshImporter("nodes.xlsx", "elements.xlsx");
                 _mesh = meshImporter.GetFigureMesh();
                 _triangularFiniteElements = _mesh.TriangularFiniteElements;
@@ -237,6 +239,7 @@ namespace CourseWork.PL
         {
             try
             {
+                _findSizeButton.IsEnabled = true;
                 RemoveScale();
                 BllService.SetCoefficients(_materials, _materialsComboBox.Text, _meshStepComboBox.Text, _forceTextBox.Text);
                 SetRectangleWidth();
